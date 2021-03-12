@@ -94,6 +94,19 @@ function listarProductosCat(req, res) {
 
 }
 
+function listarProductosNom(req, res) {
+    var idCategoria = req.params.id;
+
+    Producto.find({"IdCateroria": idCategoria },(err, productosEncontrados)=>{
+        if(err) return res.status(500).send({ mensaje: 'Error en la peticion de productos'});
+        if(!productosEncontrados) return res.status(500).send({mensaje: 'Error al obtener lso productos' });
+
+        return res.status(200).send({ productosEncontrados });
+    })
+
+}
+
+
 
 module.exports = {
     agregarProducto,
