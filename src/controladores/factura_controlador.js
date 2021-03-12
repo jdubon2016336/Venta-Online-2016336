@@ -1,23 +1,22 @@
 'use strict'
 
-var Categoria = require("../modelos/categoria.model");
-var Factura = require("../modelos/factura.model");
-var Producto = require("../modelos/producto.model");
-var Usuario = require("../modelos/usuario.model");
 
-var bcrypt = require('bcrypt-nodejs');
+var Factura = require("../modelos/factura_modelo");
+var Producto = require("../modelos/producto_modelo");
+var Usuario = require("../modelos/usuario_modelo");
+
 var jwt = require("../servicios/jwt");
 
-function CrearFactura(req, res) {
-    var facturaModel = new Factura();
+function crearFactura(req, res) {
+    var factura = new Factura();
     var params = req.body; 
  
     if(params.idUsuario){
-        facturaModel.idUsuario = params.idUsuario;
-        facturaModel.editable = "si";
-        facturaModel.save((err, guardada)=>{
-            if(err) return res.status(500).send({ mensaje: 'Error en la peticion de la Encuesta' });
-            if(!guardada) return res.status(500).send({ mensaje: 'Error al agregar la encuesta' });
+        factura.idUsuario = params.idUsuario;
+        factura.editable = "si";
+        factura.save((err, guardada)=>{
+            if(err) return res.status(500).send({ mensaje: 'Error en la peticion de la Factura' });
+            if(!guardada) return res.status(500).send({ mensaje: 'Error al agregar la factura' });
  
             return res.status(200).send({ guardada })
         })
@@ -27,39 +26,39 @@ function CrearFactura(req, res) {
     
 }
 
-function CancelarFactura(req, res) {
+function cancelarFactura(req, res) {
     var params= req.body;
 
-    Factura.findOne({_id: params.idFactura}).exec(
-        (err, factura) => {
-            if(err){
-                console.log(err);
-            }else{
-                if (factura.editable == "no"){
-                return res.status(500).send({ mensaje: "No se puede Eliminar/editar una factura terminada" });
-            }else{
-                Factura.findByIdAndDelete(params.idFactura,(err, Eliminado)=>{
-                if(err) return res.status(500).send({mensaje:"Error en la peticion"});
-                if(!Eliminado) return res.status(500).send({mensaje:"No se ha podido cancelar la factura, revise que este bien el iD"});
-                    return res.status(200).send({mensaje: "Se ha cancelado la factura"});
-                })
-            }
-            }
-            
+    Factura.findById(idFactura, (err, factura) => {
+        if(err){
+            console.log(err);
+        }else{
+            if (factura.editable == "no"){
+            return res.status(500).send({ mensaje: "No se puede Eliminar/editar una factura terminada" });
+        }else{
+            Factura.findByIdAndDelete(params.idFactura,(err, Eliminado)=>{
+            if(err) return res.status(500).send({mensaje:"Error en la peticion"});
+            if(!Eliminado) return res.status(500).send({mensaje:"No se ha podido cancelar la factura"});
+                return res.status(200).send({mensaje: "Se ha cancelado la factura"});
+            })
         }
-    )
+        }
+        
+    }
+)
+        
     
 }
 
-function FinalzarFactura(req, res) {
+function finalizarFactura(req, res) {
 
     var params = req.body; 
     var final = {};
     final['editable'] = "no";
-    Factura.findByIdAndUpdate(params.idFactura, final, { new: true }, (err, productoActualizado) => {
+    Factura.findByIdAndUpdate(params.idFactura, final, { new: true }, (err, facturaActualizado) => {
         if (err) return res.status(500).send({ mensaje: 'Error en la peticion' });
-        if (!productoActualizado) return res.status(500).send({ mensaje: 'No se a podido editar el producto' });
-        return res.status(200).send({ productoActualizado })
+        if (!facturaActualizado) return res.status(500).send({ mensaje: 'No se a podido editar la factura' });
+        return res.status(200).send({ facturaActualizado })
     })
 
     
@@ -76,12 +75,12 @@ function restaStock(Producto, cantidad){
     return productoTotal
 }
 
-function Carrito(req, res){
+function carrito(req, res){
     var idFactura = req.params.id;
     var params = req.body;
     var idProducto = params.idProducto;
 
-    Factura.findOne({_id: idFactura}).exec(
+    Factura.findById(
         (err, factura) => {
             if(err){
                 console.log(err);
@@ -95,14 +94,14 @@ function Carrito(req, res){
                     if(err) return res.status(500).send({mensaje:"Error"})
                     var Subtotal = Multiplicacion(Producto,cantidad)
                     if(Subtotal === 0 ) return res.status(400).send({mensaje:"No se encontro el producto, o la cantidad es 0"})
-                    Factura.findOne({_id:idFactura , "ProductoFactura.idProducto":idProducto, },{ProductoFactura:1}).exec((err, Facturas)=>{
+                    Factura.findOne({_id:idFactura , "ProducosFactura.idProducto":idProducto, },{ProducosFactura:1}).exec((err, Facturas)=>{
                         if(err) return res.status(500).send({mensaje:"error al obtener facturas"})
                         if(Facturas != null){
-                        if(Facturas.ProductoFactura.length > 0){
+                        if(Facturas.ProducosFactura.length > 0){
                             let i
                             let suma = cantidad
-                            for(i=0; Facturas.ProductoFactura.length > i; i++){
-                            const item =Facturas.ProductoFactura[i]
+                            for(i=0; Facturas.ProducosFactura.length > i; i++){
+                            const item =Facturas.ProducosFactura[i]
                             if(item.idProducto == idProducto){
                             suma = Number(item.cantidad) + Number(suma)
                             }
@@ -113,10 +112,10 @@ function Carrito(req, res){
                         }
                     }
                     var restasStock =  restaStock(Producto, cantidad)
-                    if(restasStock < 0 ) return res.status(400).send({mensaje:"No hay suficientes Productos en Stock2"})
-                    Factura.findByIdAndUpdate(idFactura ,{$push:{ProductoFactura:{idProducto:idProducto, cantidad:cantidad, SubTotal:Subtotal}}},{new: true}, 
+                    if(restasStock < 0 ) return res.status(400).send({mensaje:"No hay suficientes Productos en Stock"})
+                    Factura.findByIdAndUpdate(idFactura ,{$push:{ProducosFactura:{idProducto:idProducto, cantidad:cantidad, SubTotal:Subtotal}}},{new: true}, 
                         (err, En_Carrito)=>{
-                            Factura.populate(En_Carrito, {path: "ProductoFactura.idProducto"},(err, Carrito)=>{
+                            Factura.populate(En_Carrito, {path: "ProducosFactura.idProducto"},(err, Carrito)=>{
                             if(err) return res.status(500).send({mensaje:"Error al ingresar Producto"})
                             if(!Carrito) return res.status(500).send({mensaje:"La factura no existe"})
                             return res.status(200).send({Carrito})
@@ -140,8 +139,8 @@ function Carrito(req, res){
 }
 
 module.exports = {
-    CrearFactura,
-    CancelarFactura,
-    FinalzarFactura,
-    Carrito
+    crearFactura,
+    cancelarFactura,
+    finalizarFactura,
+    carrito
 }
