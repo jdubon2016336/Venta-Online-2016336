@@ -1,3 +1,5 @@
+'use strict'
+
 var Categoria = require("../modelos/categoria.model");
 var Factura = require("../modelos/factura.model");
 var Producto = require("../modelos/producto.model");
@@ -13,7 +15,6 @@ function CrearFactura(req, res) {
     if(params.idUsuario){
         facturaModel.idUsuario = params.idUsuario;
         facturaModel.editable = "si";
-        facturaModel.total = 0;
         facturaModel.save((err, guardada)=>{
             if(err) return res.status(500).send({ mensaje: 'Error en la peticion de la Encuesta' });
             if(!guardada) return res.status(500).send({ mensaje: 'Error al agregar la encuesta' });
@@ -51,6 +52,7 @@ function CancelarFactura(req, res) {
 }
 
 function FinalzarFactura(req, res) {
+
     var params = req.body; 
     var final = {};
     final['editable'] = "no";
@@ -63,8 +65,83 @@ function FinalzarFactura(req, res) {
     
 }
 
+function Multiplicacion(Producto, cantidad){
+
+    return Producto.precio * cantidad
+
+}
+
+function restaStock(Producto, cantidad){  
+    var productoTotal= Producto.cantidad - cantidad
+    return productoTotal
+}
+
+function Carrito(req, res){
+    var idFactura = req.params.id;
+    var params = req.body;
+    var idProducto = params.idProducto;
+
+    Factura.findOne({_id: idFactura}).exec(
+        (err, factura) => {
+            if(err){
+                console.log(err);
+            }else{
+                if (factura.editable == "no"){
+                return res.status(500).send({ mensaje: "No se puede Eliminar/editar una factura terminada" });
+            }else{
+                var cantidad = params.cantidad;
+                if(params.idProducto && params.cantidad){
+                Producto.findById(idProducto).exec((err, Producto)=>{
+                    if(err) return res.status(500).send({mensaje:"Error"})
+                    var Subtotal = Multiplicacion(Producto,cantidad)
+                    if(Subtotal === 0 ) return res.status(400).send({mensaje:"No se encontro el producto, o la cantidad es 0"})
+                    Factura.findOne({_id:idFactura , "ProductoFactura.idProducto":idProducto, },{ProductoFactura:1}).exec((err, Facturas)=>{
+                        if(err) return res.status(500).send({mensaje:"error al obtener facturas"})
+                        if(Facturas != null){
+                        if(Facturas.ProductoFactura.length > 0){
+                            let i
+                            let suma = cantidad
+                            for(i=0; Facturas.ProductoFactura.length > i; i++){
+                            const item =Facturas.ProductoFactura[i]
+                            if(item.idProducto == idProducto){
+                            suma = Number(item.cantidad) + Number(suma)
+                            }
+                            }
+                            var restasStock =  restaStock(Producto, suma)
+                            if(restasStock < 0 ) return res.status(400).send({mensaje:"No hay suficientes Productos en Stock"})
+
+                        }
+                    }
+                    var restasStock =  restaStock(Producto, cantidad)
+                    if(restasStock < 0 ) return res.status(400).send({mensaje:"No hay suficientes Productos en Stock2"})
+                    Factura.findByIdAndUpdate(idFactura ,{$push:{ProductoFactura:{idProducto:idProducto, cantidad:cantidad, SubTotal:Subtotal}}},{new: true}, 
+                        (err, En_Carrito)=>{
+                            Factura.populate(En_Carrito, {path: "ProductoFactura.idProducto"},(err, Carrito)=>{
+                            if(err) return res.status(500).send({mensaje:"Error al ingresar Producto"})
+                            if(!Carrito) return res.status(500).send({mensaje:"La factura no existe"})
+                            return res.status(200).send({Carrito})
+                            })
+                        })
+
+                    })
+
+                })
+            }else{
+                return res.status(200).send({mensaje:"No se enviaron los parametros correspondientes "})
+            }
+            }
+            }
+            
+        }
+    )
+
+    
+
+}
+
 module.exports = {
     CrearFactura,
     CancelarFactura,
-    FinalzarFactura
+    FinalzarFactura,
+    Carrito
 }
