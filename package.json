@@ -19,5 +19,13 @@
     "moment": "^2.29.1",
     "mongoose": "^5.11.19",
     "nodemon": "^2.0.7"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jdubon2016336/Venta-Online-2016336.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jdubon2016336/Venta-Online-2016336/issues"
+  },
+  "homepage": "https://github.com/jdubon2016336/Venta-Online-2016336#readme"
 }

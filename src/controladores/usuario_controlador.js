@@ -2,6 +2,7 @@
 
 const bcrypt = require("bcrypt-nodejs");
 const Usuario = require("../modelos/usuario_modelo");
+const Factura = require("./factura_controlador");
 const jwt = require("../servicios/jwt");
 
 function login(req, res) {
@@ -18,7 +19,10 @@ function login(req, res) {
                         token: jwt.createToken(usuarioEncontrado)});
                      }else{
                         usuarioEncontrado.contraseña = undefined;
-                        return res.status(200).send({usuarioEncontrado});
+                        return res.status(200).send({usuarioEncontrado}, {function:"Factura.find(idUsuario=req.user.id)"});
+
+                        
+
                      }
                 }else{
                     return res.status(500).send({mensaje:"El Usuario no se a podido identificar"});

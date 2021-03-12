@@ -113,5 +113,6 @@ module.exports = {
     editarProducto,
     eliminarProducto,
     listarProductos,
-    listarProductosCat
+    listarProductosCat,
+    listarProductosNom
 }

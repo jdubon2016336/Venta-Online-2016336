@@ -4,10 +4,10 @@ var mongoose = require("mongoose");
 var Schema = mongoose.Schema;
 
 var FacturaSchema = Schema({
-    idUsuarios: { type: Schema.Types.ObjectId, ref: 'usuarios' },
-    editable: 'si',
+    idUsuario: { type: Schema.Types.ObjectId, ref: 'usuarios' },
+    editable: String,
         ProducosFactura:[{
-            IdProducto: { type: Schema.Types.ObjectId, ref: 'productos' },
+            idProducto: { type: Schema.Types.ObjectId, ref: 'productos' },
             cantidad: Number,
             precio: Number,
             subTotal: Number
