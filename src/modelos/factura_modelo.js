@@ -6,8 +6,8 @@ var Schema = mongoose.Schema;
 var FacturaSchema = Schema({
     idUsuario: { type: Schema.Types.ObjectId, ref: 'usuarios' },
     editable: String,
-        ProducosFactura:[{
-            idProducto: { type: Schema.Types.ObjectId, ref: 'productos' },
+        ProductosFactura:[{
+            IdProducto: { type: Schema.Types.ObjectId, ref: 'productos' },
             cantidad: Number,
             precio: Number,
             subTotal: Number

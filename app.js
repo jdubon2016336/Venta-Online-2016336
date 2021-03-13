@@ -13,6 +13,6 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
 
-app.use('/api', usuario_rutas, categoria_rutas, producto_rutas);
+app.use('/api', usuario_rutas, categoria_rutas, producto_rutas, factura_rutas);
 
 module.exports = app

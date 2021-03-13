@@ -2,7 +2,6 @@
 
 const bcrypt = require("bcrypt-nodejs");
 const Usuario = require("../modelos/usuario_modelo");
-const Factura = require("./factura_controlador");
 const jwt = require("../servicios/jwt");
 
 function login(req, res) {
@@ -19,10 +18,7 @@ function login(req, res) {
                         token: jwt.createToken(usuarioEncontrado)});
                      }else{
                         usuarioEncontrado.contraseña = undefined;
-                        return res.status(200).send({usuarioEncontrado}, {function:"Factura.find(idUsuario=req.user.id)"});
-
-                        
-
+                        return res.status(200).send({usuarioEncontrado});
                      }
                 }else{
                     return res.status(500).send({mensaje:"El Usuario no se a podido identificar"});
@@ -71,85 +67,87 @@ function registrar(req,res){
 }
 
 function editarUsuario(req, res) {
- var idAdmin = req.params.id;
 
-    if(req.user.sub != idAdmin){
-        if (req.user.rol === "ROL_ADMIN"){
-            var idUsuario = req.params.id;
-            var params = req.body;
-            
-            delete params.contraseña;
-            if(idUsuario.rol === "ROL_CLIENTE"){
-                Usuario.findByIdAndUpdate(idUsuario, params, { new: true }, (err, usuarioActualizado) => {
-                    if (err) return res.status(500).send({ mensaje: 'Error en la peticion' });
-                    if (!usuarioActualizado) return res.status(500).send({ mensaje: 'No se a podido editar el Usuario' });
-            
-                    return res.status(200).send({ usuarioActualizado })
-                })
-            
-            }else{
-                return res.status(500).send({mensaje:"no puede editar a otro administrador"})
-            }
-        }else{
-            var idUsuario = req.params.id;
-            var params = req.body;
-        
-            delete params.contraseña;
-        
-            if (idUsuario != req.user.sub) {
-                return res.status(500).send({ mensaje: 'No posee los permisos para editar ese usuario' });
-            }
-            
-            Usuario.findByIdAndUpdate(idUsuario, params, { new: true }, (err, usuarioActualizado) => {
-                if (err) return res.status(500).send({ mensaje: 'Error en la peticion' });
-                if (!usuarioActualizado) return res.status(500).send({ mensaje: 'No se a podido editar al Usuario' });
-        
-                return res.status(200).send({ usuarioActualizado })
-            })
-        }
+ if (req.user.rol === "ROL_ADMIN"){
+    var idUsuario = req.params.id;
+    var params = req.body;
+    
+    delete params.contraseña;
+    if(idUsuario.rol === "ROL_CLIENTE"){
+        Usuario.findByIdAndUpdate(idUsuario, params, { new: true }, (err, usuarioActualizado) => {
+            if (err) return res.status(500).send({ mensaje: 'Error en la peticion' });
+            if (!usuarioActualizado) return res.status(500).send({ mensaje: 'No se a podido editar el Usuario' });
+    
+            return res.status(200).send({ usuarioActualizado })
+        })
+    
     }else{
-        return res.status(200).send({ mensaje: "No puede editar un administrador" })
+        return res.status(500).send({mensaje:"no puede editar a otro administrador"})
     }
+}else{
+    var idUsuario = req.params.id;
+    var params = req.body;
 
+    delete params.contraseña;
+
+    if (idUsuario != req.user.sub) {
+        return res.status(500).send({ mensaje: 'No posee los permisos para editar ese usuario' });
+    }
+    
+    Usuario.findByIdAndUpdate(idUsuario, params, { new: true }, (err, usuarioActualizado) => {
+        if (err) return res.status(500).send({ mensaje: 'Error en la peticion' });
+        if (!usuarioActualizado) return res.status(500).send({ mensaje: 'No se a podido editar al Usuario' });
+
+        return res.status(200).send({ usuarioActualizado })
+    })
+}
   
 }
 
 function eliminarUsuario(req, res){
-    var idAdmin = req.params.id;
     
-    if(req.user.sub != idAdmin){
-        if (req.user.rol === "ROL_ADMIN"){
-            var idUsuario = req.params.id;
+    if (req.user.rol === "ROL_ADMIN"){
+        var idUsuario = req.params.id;
 
-            if(idUsuario.rol === "ROL_CLIENTE"){
-                Usuario.findByIdAndDelete(idUsuario, (err, usuarioEliminado) => {
-                    if (err) return res.status(500).send({ mensaje: 'Error en la peticion' });
-                    if (!usuarioEliminado) return res.status(500).send({ mensaje: 'No se a podido eliominar el Usuario' });
-            
-                    return res.status(200).send({ mensaje:"usario Eliminado" })
-                })
-            
-            }else{
-                return res.status(500).send({mensaje:"no puede eliminar a otro administrador"})
-            }
-        }else{
-            var idUsuario = req.params.id;
-        
-        
-            if (idUsuario != req.user.sub) {
-                return res.status(500).send({ mensaje: 'No posee los permisos para eliminar ese usuario' });
-            }
-            
+        if(idUsuario.rol === "ROL_CLIENTE"){
             Usuario.findByIdAndDelete(idUsuario, (err, usuarioEliminado) => {
                 if (err) return res.status(500).send({ mensaje: 'Error en la peticion' });
-                if (!usuarioEliminado) return res.status(500).send({ mensaje: 'No se a podido eliminar al Usuario' });
+                if (!usuarioEliminado) return res.status(500).send({ mensaje: 'No se a podido eliominar el Usuario' });
         
-                return res.status(200).send({ mensaje:"usuario eliminado" })
+                return res.status(200).send({ mensaje:"usario Eliminado" })
             })
+        
+        }else{
+            return res.status(500).send({mensaje:"no puede eliminar a otro administrador"})
         }
     }else{
-        return res.status(200).send({ mensaje: "No puede eliminar un administrador" })
+        var idUsuario = req.params.id;
+    
+    
+        if (idUsuario != req.user.sub) {
+            return res.status(500).send({ mensaje: 'No posee los permisos para eliminar ese usuario' });
+        }
+        
+        Usuario.findByIdAndDelete(idUsuario, (err, usuarioEliminado) => {
+            if (err) return res.status(500).send({ mensaje: 'Error en la peticion' });
+            if (!usuarioEliminado) return res.status(500).send({ mensaje: 'No se a podido eliminar al Usuario' });
+    
+            return res.status(200).send({ mensaje:"usuario eliminado" })
+        })
     }
+    
+}
+
+function obtenerFacturas(req, res){
+    Factura.find({idUsuario : req.user.sub}).exec(
+        (err, fac) => {
+           if(err){res.status(500).send("Error en la peticion");
+           }else{
+            if (!fac) return res.status(500).send({mensaje: "No hay facturas"})
+            return res.status(200).send({fac});
+           }
+        }  
+    )
 }
 
 
@@ -158,5 +156,6 @@ module.exports = {
     login,
     registrar,
     editarUsuario,
-    eliminarUsuario
+    eliminarUsuario,
+    obtenerFacturas
 }

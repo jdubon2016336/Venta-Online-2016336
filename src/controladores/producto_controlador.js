@@ -85,7 +85,7 @@ function listarProductos(req, res){
 function listarProductosCat(req, res) {
     var idCategoria = req.params.id;
 
-    Producto.find({"IdCateroria": idCategoria },(err, productosEncontrados)=>{
+    Producto.find({"idCateroria": idCategoria },(err, productosEncontrados)=>{
         if(err) return res.status(500).send({ mensaje: 'Error en la peticion de productos'});
         if(!productosEncontrados) return res.status(500).send({mensaje: 'Error al obtener lso productos' });
 
@@ -95,11 +95,11 @@ function listarProductosCat(req, res) {
 }
 
 function listarProductosNom(req, res) {
-    var idCategoria = req.params.id;
+    var nombre = req.body;
 
-    Producto.find({"IdCateroria": idCategoria },(err, productosEncontrados)=>{
+    Producto.find({"nombre": nombre },(err, productosEncontrados)=>{
         if(err) return res.status(500).send({ mensaje: 'Error en la peticion de productos'});
-        if(!productosEncontrados) return res.status(500).send({mensaje: 'Error al obtener lso productos' });
+        if(!productosEncontrados) return res.status(500).send({mensaje: 'Error al obtener los productos' });
 
         return res.status(200).send({ productosEncontrados });
     })
